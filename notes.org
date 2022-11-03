@@ -1,0 +1,86 @@
+* Notes
+NOTE:
+- When you use the 'rails new (appName) --api' command, this does not allow you to begin working with 'sessions' and 'cookies' right away
+
+I then needed to update the application's configuration file in the 'config/application.rb' file with the following contents:
+#+begin_src ruby
+module Phase4CookiesInRailsApi
+  class Application < Rails::Application
+    # Initialize configuration defaults for originally generated Rails version.
+    config.load_defaults 6.1
+
+    # Configuration for the application, engines, and railties goes here.
+    #
+    # These settings can be overridden in specific environments using the files
+    # in config/environments, which are processed later.
+    #
+    # config.time_zone = "Central Time (US & Canada)"
+    # config.eager_load_paths << Rails.root.join("extras")
+
+    # Only loads a smaller set of middleware suitable for API only apps.
+    # Middleware like session, flash, cookies can be added back manually.
+    # Skip views, helpers and assets when generating a new resource.
+    config.api_only = true
+
+    # Adding back cookies and session middleware
+    config.middleware.use ActionDispatch::Cookies
+    config.middleware.use ActionDispatch::Session::CookieStore
+
+    # Use SameSite=Strict for all cookies to help protect against CSRF
+    config.action_dispatch.cookies_same_site_protection = :strict
+  end
+end
+#+end_src
+
+I then updated the 'app/controllers/application_controller.rb' Application Controller to be able to access the 'cookies' hash by changing its file contents to the following:
+#+begin_src ruby
+class ApplicationController < ActionController::API
+  include ActionController::Cookies
+end
+#+end_src
+
+I then ran the following commands to setup this lab:
+#+begin_src bash
+bundle install
+rails s
+#+end_src
+
+I then opened the 'http://localhost:3000/sessions' URL in the Chrome browser and received the following output:
+#+begin_src json
+// 20221103183222
+// http://localhost:3000/sessions
+{
+  "session": {
+    "session_id": "3bcec928404c3c2d4337f457d08114f4",
+    "session_hello": "World"
+  },
+  "cookies": {
+    "cookies_hello": "World"
+  }
+}
+#+end_src
+
+This output reflects the fact that it ran the 'SessionsController#index' method:
+#+begin_src ruby
+class SessionsController < ApplicationController
+
+  def index
+    session[:session_hello] ||= "World"
+    cookies[:cookies_hello] ||= "World"
+    render json: { session: session, cookies: cookies.to_hash }
+  end
+
+end
+#+end_src
+
+NOTE:
+'||=' is Ruby syntax to assign a value to a symbol if the current value is 'nil' or 'false'
+
+Notes:
+- When the user makes a request to the controller the first time, Rails will include the 'Set-Cookie' response handler with our sessions and cookies values
+- This will instruct the client browser to store these values in memory and send them with any future requests on the domain
+
+NOTE:
+- You can even look at the same cookie by hitting F12 in the Chrome browser > Application > Storage > Cookies > http://localhost:3000
+- You can also look for the specific 'Set-Cookie' value by going to Network > click 'Sessions' > scroll down until you find 'Set-Cookie'
+- This also means that you can't change the 'cookies_hello' key value since even if you do, after refreshing the page, it still displays yet another 'cookies_hello' cookie with the same data
