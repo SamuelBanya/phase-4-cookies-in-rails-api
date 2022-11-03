@@ -84,3 +84,21 @@ NOTE:
 - You can even look at the same cookie by hitting F12 in the Chrome browser > Application > Storage > Cookies > http://localhost:3000
 - You can also look for the specific 'Set-Cookie' value by going to Network > click 'Sessions' > scroll down until you find 'Set-Cookie'
 - This also means that you can't change the 'cookies_hello' key value since even if you do, after refreshing the page, it still displays yet another 'cookies_hello' cookie with the same data
+
+Answers To 'Check Your Understanding':
+- Q1. What configuration changes need to be made to enable session and cookie support in a Rails API application?
+- Answer:
+- You need to add the following to the 'config/application.rb' Application config file:
+#+begin_src ruby
+  # Must add these lines!
+  # Adding back cookies and session middleware
+  config.middleware.use ActionDispatch::Cookies
+  config.middleware.use ActionDispatch::Session::CookieStore
+
+  # Use SameSite=Strict for all cookies to help protect against CSRF
+  config.action_dispatch.cookies_same_site_protection = :strict
+#+end_src
+- Q2. What are the two ways you can inspect a website's cookies using the browser dev tools?
+- Answer:
+- You can view the cookie directly by hitting F12 to open up the Chrome Developer Console, and go to Application > Storage > Cookies > (website address) > click on Cookie
+- You can also refresh the page's request, hit F12, and then go to Network > 'sessions' > Headers > scroll down to 'Set-Cookie'
